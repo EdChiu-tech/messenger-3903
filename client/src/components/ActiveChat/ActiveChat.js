@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Box } from "@material-ui/core";
 import { Input, Header, Messages } from "./index";
@@ -27,10 +27,16 @@ const ActiveChat = (props) => {
   const { user, setReadConversation } = props;
   const conversation = props.conversation || {};
 
+  const [numMessages, setNumMessages] = useState(0);
+
+  useEffect(() => {
+    if (conversation.id) setNumMessages(conversation.messages.length);
+  }, [conversation]);
+
   useEffect(() => {
     if (conversation.id)
       setReadConversation(conversation.id, conversation.otherUser.id);
-  }, [conversation.id]);
+  }, [numMessages]);
 
   return (
     <Box className={classes.root}>
@@ -63,10 +69,7 @@ const mapStateToProps = (state) => {
     user: state.user,
     conversation:
       state.conversations &&
-      state.conversations.find(
-        (conversation) =>
-          conversation.otherUser.username === state.activeConversation
-      ),
+      state.conversations.find((conversation) => conversation.active === true),
   };
 };
 
