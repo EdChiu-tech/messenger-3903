@@ -1,5 +1,5 @@
-import React from "react";
-import { Box } from "@material-ui/core";
+import React, { useState, useEffect } from "react";
+import { Box, Badge } from "@material-ui/core";
 import { BadgeAvatar, ChatContent } from "../Sidebar";
 import { makeStyles } from "@material-ui/core/styles";
 import { setActiveChat } from "../../store/activeConversation";
@@ -14,19 +14,29 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "center",
     "&:hover": {
-      cursor: "grab"
-    }
-  }
+      cursor: "grab",
+    },
+  },
 }));
 
 const Chat = (props) => {
   const classes = useStyles();
-  const { conversation } = props;
-  const { otherUser } = conversation;
+  const { user, conversation, activeConversation } = props;
+  const { messages, otherUser } = conversation;
+
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const handleClick = async (conversation) => {
     await props.setActiveChat(conversation.otherUser.username);
   };
+
+  useEffect(() => {
+    const unreadCount = messages.filter(
+      (message) => message.senderId !== user.id && message.unread
+    ).length;
+
+    setUnreadCount(unreadCount);
+  }, [conversation]);
 
   return (
     <Box onClick={() => handleClick(conversation)} className={classes.root}>
@@ -37,16 +47,28 @@ const Chat = (props) => {
         sidebar={true}
       />
       <ChatContent conversation={conversation} />
+
+      {unreadCount > 0 &&
+        activeConversation !== conversation.otherUser.username && (
+          <Badge badgeContent={unreadCount} color="primary"></Badge>
+        )}
     </Box>
   );
+};
+
+const mapStateToProps = (state) => {
+  return {
+    user: state.user,
+    activeConversation: state.activeConversation,
+  };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
     setActiveChat: (id) => {
       dispatch(setActiveChat(id));
-    }
+    },
   };
 };
 
-export default connect(null, mapDispatchToProps)(Chat);
+export default connect(mapStateToProps, mapDispatchToProps)(Chat);

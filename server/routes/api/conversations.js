@@ -69,13 +69,39 @@ router.get("/", async (req, res, next) => {
 
       // set properties for notification count and latest message preview
       convoJSON.latestMessageText = convoJSON.messages[0].text;
-      convoJSON.messages.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      convoJSON.messages.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
       conversations[i] = convoJSON;
     }
 
     res.json(conversations);
   } catch (error) {
     next(error);
+  }
+});
+
+router.post("/read", async (req, res, next) => {
+  try {
+    const { conversationId, senderId } = req.body;
+
+    await Message.update(
+      {
+        unread: false,
+      },
+      {
+        where: {
+          conversationId,
+          senderId,
+          unread: true,
+        },
+      }
+    );
+
+    res.sendStatus(200);
+  } catch (err) {
+    next(err);
   }
 });
 
