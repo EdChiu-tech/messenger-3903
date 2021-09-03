@@ -15,7 +15,10 @@ export const addMessageToStore = (state, payload) => {
     if (convo.id === message.conversationId) {
       const convoCopy = { ...convo };
 
-      convoCopy.messages.push(message);
+      convoCopy.messages.push(
+        convo.active ? { ...message, unread: false } : message
+      );
+
       convoCopy.latestMessageText = message.text;
       return convoCopy;
     } else {
@@ -97,4 +100,11 @@ export const setConversationRead = (state, conversationId) => {
       return convo;
     }
   });
+};
+
+export const setConversationActive = (state, activeConversationId) => {
+  return state.map((convo) => ({
+    ...convo,
+    active: convo.id === activeConversationId,
+  }));
 };
