@@ -1,8 +1,8 @@
-import React from "react";
-import { Box } from "@material-ui/core";
+import React, { useState, useEffect } from "react";
+import { Box, Badge } from "@material-ui/core";
 import { BadgeAvatar, ChatContent } from "../Sidebar";
 import { makeStyles } from "@material-ui/core/styles";
-import { setActiveChat } from "../../store/activeConversation";
+import { setActiveConversation } from "../../store/conversations";
 import { connect } from "react-redux";
 
 const useStyles = makeStyles((theme) => ({
@@ -14,19 +14,29 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "center",
     "&:hover": {
-      cursor: "grab"
-    }
-  }
+      cursor: "grab",
+    },
+  },
 }));
 
 const Chat = (props) => {
   const classes = useStyles();
-  const { conversation } = props;
-  const { otherUser } = conversation;
+  const { user, conversation } = props;
+  const { messages, otherUser } = conversation;
+
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const handleClick = async (conversation) => {
-    await props.setActiveChat(conversation.otherUser.username);
+    await props.setActiveConversation(conversation.id);
   };
+
+  useEffect(() => {
+    const unreadCount = messages.filter(
+      (message) => message.senderId !== user.id && message.unread
+    ).length;
+
+    setUnreadCount(unreadCount);
+  }, [conversation]);
 
   return (
     <Box onClick={() => handleClick(conversation)} className={classes.root}>
@@ -37,16 +47,26 @@ const Chat = (props) => {
         sidebar={true}
       />
       <ChatContent conversation={conversation} />
+
+      {unreadCount > 0 && !conversation.active && (
+        <Badge badgeContent={unreadCount} color="primary"></Badge>
+      )}
     </Box>
   );
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapStateToProps = (state) => {
   return {
-    setActiveChat: (id) => {
-      dispatch(setActiveChat(id));
-    }
+    user: state.user,
   };
 };
 
-export default connect(null, mapDispatchToProps)(Chat);
+const mapDispatchToProps = (dispatch) => {
+  return {
+    setActiveConversation: (conversationId) => {
+      dispatch(setActiveConversation(conversationId));
+    },
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Chat);
