@@ -95,7 +95,7 @@ const sendMessage = (data, body) => {
 export const setReadConversation =
   (conversationId, senderId) => async (dispatch) => {
     try {
-      await axios.post("/api/conversations/read", { conversationId, senderId });
+      await axios.put("/api/conversations/read", { conversationId, senderId });
       dispatch(setReadMessages(conversationId));
     } catch (error) {
       console.error(error);

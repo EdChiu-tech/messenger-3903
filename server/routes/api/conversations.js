@@ -61,7 +61,7 @@ router.get("/", async (req, res, next) => {
       }
 
       // set property for online status of the other user
-      if (onlineUsers.includes(convoJSON.otherUser.id)) {
+      if (onlineUsers[convoJSON.otherUser.id]) {
         convoJSON.otherUser.online = true;
       } else {
         convoJSON.otherUser.online = false;
@@ -73,6 +73,9 @@ router.get("/", async (req, res, next) => {
         (a, b) =>
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
+      convoJSON.unreadCount = convoJSON.messages.filter(
+        (message) => message.senderId !== req.user.id && message.unread
+      ).length;
       conversations[i] = convoJSON;
     }
 
@@ -82,8 +85,12 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.post("/read", async (req, res, next) => {
+router.put("/read", async (req, res, next) => {
   try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+
     const { conversationId, senderId } = req.body;
 
     await Message.update(
@@ -99,7 +106,7 @@ router.post("/read", async (req, res, next) => {
       }
     );
 
-    res.sendStatus(200);
+    res.sendStatus(204);
   } catch (err) {
     next(err);
   }
